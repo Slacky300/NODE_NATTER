@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { register } from '../../helpers/auth/authFn';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/authContext';
 import { toast } from 'react-toastify';
 import { useUpdate } from '../../context/hasUpdated';
 

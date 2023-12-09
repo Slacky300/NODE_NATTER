@@ -1,4 +1,3 @@
-import message from "../../../../models/message";
 
 export const sendMessage = async (content, room, token) => {
   try {

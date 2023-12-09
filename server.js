@@ -7,6 +7,7 @@ import { dirname } from 'path';
 import userRouter from './routes/user.js';
 import MessageRoutes from './routes/messages.js';
 import RoomRoutes from './routes/room.js';
+import https from 'https';
 import dbConnect from './utils/dbConnect.js';
 import cors from 'cors';
 
@@ -15,10 +16,16 @@ const __dirname = dirname(__filename);
 
 const app = express();
 
-const server = http.createServer(app);
+let server;
+
+if(!process.env.PRODUCTION){
+  server = http.createServer(app);
+}else{
+  server = https.createServer(app);
+}
 const io = new Server(server, {
   cors: {
-    origin: 'http://localhost:5173', // or '*' for any origin
+    origin:['http://localhost:5173','https://socket-chat-frntd.vercel.app/'] ,// or '*' for any origin
     methods: ['GET', 'POST'],
     transports: ['websocket'], // Allow WebSocket transport
   },
