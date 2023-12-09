@@ -11,7 +11,11 @@ const ChatRoom = () => {
 
   const { auth } = useAuth();
   const { roomId } = useParams();
+  const [isTyping, setIsTyping] = useState(false);
+
   const [roomMembers, setRoomMembers] = useState([]);
+
+  const [typingUsers, setTypingUsers] = useState("");
 
   const [message, setMessage] = useState('');
   const messagesContainerRef = useRef(null);
@@ -51,11 +55,22 @@ const ChatRoom = () => {
       setSocketMessages((prevMessages) => [...prevMessages, data]);
     })
 
-  
+
     socket.on('disconnected-from-room', (data) => {
       setRoomMembers((prevMembers) => [...prevMembers, data.members]);
       setSocketMessages((prevMessages) => [...prevMessages, data]);
     });
+
+    socket.on('typing', (data) => {
+      setTypingUsers(data);
+    });
+
+    socket.on('stopTyping', (data) => {
+      setTypingUsers('');
+      console.log(typingUsers);
+    });
+
+
 
 
 
@@ -94,7 +109,7 @@ const ChatRoom = () => {
     getMessages();
   }, [roomId, auth?.token]);
 
-  
+
 
   useEffect(() => {
     // Scroll to the bottom when messages change
@@ -114,13 +129,14 @@ const ChatRoom = () => {
 
       socket.emit('message-sent', { message, user: auth?.user?.username, room: roomId });
 
-      const res = await sendMessage(message, roomId, auth?.token);
+      const newMessage = message
+      setMessage('');
+      const res = await sendMessage(newMessage, roomId, auth?.token);
 
       if (res.status === 201) {
       } else {
         toast.error(res.message);
       }
-      setMessage('');
 
     } catch (error) {
       console.error('Error sending message:', error);
@@ -133,8 +149,28 @@ const ChatRoom = () => {
   }
 
   const leaveRoom = () => {
-    socket.emit('leaveRoom',{ roomId, user: auth?.user?.username, roomMembers: roomMembers});
+    socket.emit('leaveRoom', { roomId, user: auth?.user?.username, roomMembers: roomMembers });
   }
+
+  const typing = () => {
+    if (!isTyping) {
+      setIsTyping(true);
+      socket.emit('typing', { user: auth?.user?.username, room: roomId });
+    }
+  };
+
+  const stopTyping = () => {
+    setIsTyping(false);
+    socket.emit('stopTyping', { user: auth?.user?.name, room: roomId });
+  };
+
+  useEffect(() => {
+
+    if (message.trim() === '') {
+      stopTyping();
+    }
+  }, [message]);
+
 
 
   return (
@@ -144,7 +180,7 @@ const ChatRoom = () => {
           <>
             {isActive && showModel()}
             <div>
-             
+
               <div className="modal fade" id="confirmModal" tabIndex={-1} aria-labelledby="exampleModalLabel" aria-hidden="true">
                 <div className="modal-dialog">
                   <div className="modal-content">
@@ -168,56 +204,62 @@ const ChatRoom = () => {
         )}
       </ReactRouterPrompt>
 
-      <button type="button" style={{display: "none"}} id='queyBtn' className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#confirmModal">
-                Launch demo modal
+      <button type="button" style={{ display: "none" }} id='queyBtn' className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#confirmModal">
+        Launch demo modal
       </button>
       <div className='container my-5'>
-        <div className='row d-flex mx-2 justify-content-center align-items-center'>
-          <div className='card' style={{ maxWidth: "50em", height: "80vh" }}>
-            <div className='card-header text-center'>
-              <h1>CHAT ROOM</h1>
-              
+        <div className='row d-flex mx-2  justify-content-center align-items-center'>
+      <div className='card '  style={{ maxWidth: "50em", height: "80vh" , border: "2px solid black"}}>
+        <div className='card-header text-center'>
+         
+          <span>
+            CHAT ROOM &nbsp; 
+            {typingUsers.length > 0 && !isTyping ? (
+            <span className='text-muted'><i> {typingUsers} is typing...</i></span>
+            ) : (
+              <></>
+            )}
+          </span>
+        </div>
+        <div className='card-body d-flex flex-column'>
+          {/* Chat messages container */}
+          <div
+            ref={messagesContainerRef}
+            className='flex-grow-1 overflow-auto'
+            style={{ maxHeight: '55vh' }}
+          >
+            {/* Display chat messages here */}
+            {socketMessages && socketMessages.map((msg, index) => (
+              <ChatBubble key={index}
+                isSent={msg.user.username ? msg?.user?.username === auth?.user?.username : true}
+                sender={msg?.user?.username}
+                message={msg.message}
+                system={msg.isSystemMessage} />
+            ))}
+          </div>
+          {/* Input and Send button */}
+          <div className='row align-items-end'>
+            <div className='col'>
+              <input
+                type='text'
+                className='form-control'
+                placeholder='Type your message...'
+                value={message}
+                onChange={(e) => { handleChange(e), typing() }}
+                onBlur={stopTyping}
+              />
             </div>
-            <div className='card-body d-flex flex-column'>
-              {/* Chat messages container */}
-              <div
-                ref={messagesContainerRef}
-                className='flex-grow-1 overflow-auto'
-                style={{ maxHeight: '55vh' }}
-              >
-                {/* Display chat messages here */}
-
-                {socketMessages && socketMessages.map((msg, index) => (
-                  <>
-                    <ChatBubble key={index}
-                      isSent={msg.user.username ? msg?.user?.username === auth?.user?.username : true}
-                      sender={msg?.user?.username}
-                      message={msg.message}
-                      system={msg.isSystemMessage} />
-                  </>
-                ))}
-              </div>
-              {/* Input and Send button */}
-              <div className='row align-items-end'>
-                <div className='col'>
-                  <input
-                    type='text'
-                    className='form-control'
-                    placeholder='Type your message...'
-                    value={message}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div className='col-auto'>
-                  <button onClick={handleSubmit} className='btn btn-primary'>
-                    Send
-                  </button>
-                </div>
-              </div>
+            <div className='col-auto'>
+              <button onClick={handleSubmit} className='btn btn-primary'>
+                Send
+              </button>
             </div>
           </div>
         </div>
       </div>
+      </div>
+      </div>
+
     </>
 
 
