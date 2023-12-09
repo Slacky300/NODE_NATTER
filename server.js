@@ -25,7 +25,7 @@ if(!process.env.PRODUCTION){
 }
 const io = new Server(server, {
   cors: {
-    origin:['http://localhost:5173','https://socket-chat-frntd.vercel.app/'] ,// or '*' for any origin
+    origin:['http://localhost:5173','https://socket-chat-frntd.vercel.app'] ,// or '*' for any origin
     methods: ['GET', 'POST'],
     transports: ['websocket'], // Allow WebSocket transport
   },
