@@ -1,6 +1,7 @@
 import Room from '../models/room.js';
 import User from '../models/user.js';
-import bcrypt from 'bcrypt';
+import Message from '../models/message.js';
+import bcrypt from "bcrypt";
 
 export const createRoom = async (req, res) => {
 
@@ -63,12 +64,12 @@ export const getRoom = async (req, res) => {
 
 export const joinRoom = async (req, res) => {
     const { id } = req.params;
-    console.log(req.body);
     const {roomPassword} = req.body;
 
     try {
         const room = await Room.findById(id);
-        if (!bcrypt.compare(roomPassword, room.roomPassword)) {
+        const isCorrectPassword = await bcrypt.compare(roomPassword, room.roomPassword);
+        if (!isCorrectPassword) {
             return res.status(401).json({ message: 'Invalid password' });
         }
         if(room.users.includes(req.user.id)){
@@ -110,6 +111,35 @@ export const leaveRoom = async (req, res) => {
         await user.save();
 
         res.status(200).json({room: room, message: `You have left ${room.roomName}`});
+    } catch (error) {
+        res.status(404).json({ message: error.message });
+    }
+}
+
+export const deleteRoom = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const room = await Room.findById(id);
+        const user = await User.findById(req.user.id);
+        for(let i = 0; i < room.users.length; i++){
+            const user = await User.findById(room.users[i]);
+            if(user.roomsJoined.includes(room._id)){
+                user.roomsJoined.pull(room._id);
+                await user.save();
+            }
+        }
+        if(user.roomsJoined.includes(room._id)){
+            user.roomsJoined.pull(room._id);
+            await user.save();
+        }
+        user.roomsCreated.pull(room._id);
+        await user.save();
+        for(const message of room.messages){
+            await Message.findByIdAndDelete(message);
+        }
+        await Room.findByIdAndDelete(id);
+        res.status(200).json({ message: 'Room deleted successfully.' });
     } catch (error) {
         res.status(404).json({ message: error.message });
     }

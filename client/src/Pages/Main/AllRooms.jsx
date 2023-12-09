@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../context/authContext';
 import { useNavigate } from 'react-router-dom';
-import { fetchAllActiveRooms, verifyRoomPassword, createRoom } from '../../helpers/room/roomFn.jsx';
+import { fetchAllActiveRooms, verifyRoomPassword, createRoom, deleteRoom } from '../../helpers/room/roomFn.jsx';
 import { toast } from 'react-toastify';
 import { useUpdate } from '../../context/hasUpdated.jsx';
 
@@ -63,6 +63,16 @@ const AllRooms = () => {
 
     }
 
+    const handleDelete = async (roomId) => {
+        const res = await deleteRoom(roomId, token);
+        if (res.status === 200) {
+            toast(res.message, { type: 'success' });
+            setRooms(rooms.filter((room) => room._id !== roomId));
+        } else {
+            toast(res.error, { type: 'error' });
+        }
+    }
+
     useEffect(() => {
         const fetchRooms = async () => {
             const data = await fetchAllActiveRooms(token);
@@ -83,12 +93,17 @@ const AllRooms = () => {
                         <div key={index} className="card mx-5 my-5" style={{ width: '18rem' }}>
                             <div className="card-body">
                                 <h5 className="card-title">{room.roomName}</h5>
-                                <h6 className="card-subtitle mb-2 text-body-secondary">Active Members : {room?.users?.length}/{room.maxUsers}</h6>
+                                <h6 className="card-subtitle mb-2 text-body-secondary">Members : {room?.users?.length}/{room.maxUsers}</h6>
                                 <p className="card-text">Created By: {room.roomCreator.username}</p>
                                 <div className='d-flex justify-content-end'>
+                                {auth?.user?.username === room.roomCreator.username &&
+                                 <button type="button" 
+                                 onClick={() => handleDelete(room._id)}
+                                 className="btn btn-danger mx-2">Delete</button>}
                                 <button onClick={() => setRoomId(room._id)} type="button" className="btn btn-success" data-bs-toggle="modal" data-bs-target="#exampleModal">
                                     Join Room
                                 </button>
+                                
                                     </div>
                             </div>
                         </div>
@@ -98,6 +113,8 @@ const AllRooms = () => {
 
                 </div>
             </div>
+
+          
 
 
             <div className="modal fade" id="exampleModal" tabIndex={-1} aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -115,7 +132,7 @@ const AllRooms = () => {
                                     <input type="password" onChange={handleChange} className="form-control" id="roomPassword" placeholder="Enter Room Password" />
                                 </div>
                                 <div className='d-flex justify-content-end'>
-                                <button type="submit" data-bs-dismiss="modal" className="btn btn-primary">Submit</button>
+                                <button type="submit" data-bs-dismiss="modal" className="btn btn-primary my-2">Submit</button>
                                 </div>
                             </form>
                         </div>

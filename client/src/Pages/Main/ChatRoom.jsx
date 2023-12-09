@@ -4,14 +4,14 @@ import socket from '../../../config.js';
 import { useParams } from 'react-router-dom';
 import ChatBubble from '../../components/ChatBubble.jsx';
 import { fetchMessages, sendMessage } from '../../helpers/chats/chatFn.jsx';
-import { toast } from 'react-toastify';
-
+import ReactRouterPrompt from 'react-router-prompt';
 
 const ChatRoom = () => {
 
 
   const { auth } = useAuth();
   const { roomId } = useParams();
+  const [roomMembers, setRoomMembers] = useState([]);
 
   const [message, setMessage] = useState('');
   const messagesContainerRef = useRef(null);
@@ -27,7 +27,7 @@ const ChatRoom = () => {
   const handleChange = (e) => {
     setMessage(e.target.value);
   }
- 
+
 
   useEffect(() => {
     socket.emit('joinRoom', roomId, auth?.user?.username);
@@ -47,14 +47,15 @@ const ChatRoom = () => {
     });
 
     socket.on('joinRoom', (data) => {
+      setRoomMembers((prevMembers) => [...prevMembers, data.members]);
       setSocketMessages((prevMessages) => [...prevMessages, data]);
     })
 
-    window.addEventListener('beforeunload', (event) => {
-      socket.emit('leaveRoom', roomId, auth?.user?.username);
-    }
-    );
-
+  
+    socket.on('disconnected-from-room', (data) => {
+      setRoomMembers((prevMembers) => [...prevMembers, data.members]);
+      setSocketMessages((prevMessages) => [...prevMessages, data]);
+    });
 
 
 
@@ -93,17 +94,7 @@ const ChatRoom = () => {
     getMessages();
   }, [roomId, auth?.token]);
 
-  useEffect(() => {
-    const handleBeforeUnload = (event) => {
-      alert('You are leaving the chat room');
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  },[]);
+  
 
   useEffect(() => {
     // Scroll to the bottom when messages change
@@ -136,18 +127,62 @@ const ChatRoom = () => {
     }
   };
 
+  const showModel = () => {
+    const btn = document.getElementById('queyBtn');
+    btn.click();
+  }
 
+  const leaveRoom = () => {
+    socket.emit('leaveRoom',{ roomId, user: auth?.user?.username, roomMembers: roomMembers});
+  }
 
 
   return (
     <>
+      <ReactRouterPrompt when={true}>
+        {({ isActive, onConfirm, onCancel }) => (
+          <>
+            {isActive && showModel()}
+            <div>
+             
+              <div className="modal fade" id="confirmModal" tabIndex={-1} aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div className="modal-dialog">
+                  <div className="modal-content">
+                    <div className="modal-header">
+                      <h1 className="modal-title fs-5" id="exampleModalLabel">Confirm Action</h1>
+                      <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close" />
+                    </div>
+                    <div className="modal-body">
+                      Are you sure you want to leave the chat room?
+                    </div>
+                    <div className="modal-footer">
+                      <button type="button" className="btn btn-secondary" data-bs-dismiss="modal" onClick={onCancel}>No</button>
+                      <button type="button" className="btn btn-primary" data-bs-dismiss="modal" onClick={() => { onConfirm(); leaveRoom(); }}>Yes</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-     
+          </>
+        )}
+      </ReactRouterPrompt>
+
+      <button type="button" style={{display: "none"}} id='queyBtn' className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#confirmModal">
+                Launch demo modal
+      </button>
       <div className='container my-5'>
         <div className='row d-flex mx-2 justify-content-center align-items-center'>
           <div className='card' style={{ maxWidth: "50em", height: "80vh" }}>
             <div className='card-header text-center'>
               <h1>CHAT ROOM</h1>
+              <ul className='list-inline'>
+                {roomMembers && roomMembers?.map((member, index) => (
+                  <li className='list-inline-item' key={index}>
+                    {member}
+                  </li>
+                ))}
+              </ul>
             </div>
             <div className='card-body d-flex flex-column'>
               {/* Chat messages container */}

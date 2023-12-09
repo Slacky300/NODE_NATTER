@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { RouterProvider, createBrowserRouter } from 'react-router-dom'
 import './App.css'
 import Navbar from './components/Navbar'
 import Private from './components/PrivateRoutes';
@@ -8,29 +8,28 @@ import ChatRoom from './Pages/Main/ChatRoom';
 import AllRooms from './Pages/Main/AllRooms';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Layout from './Pages/Main/Layout';
 
 
 function App() {
 
+   
+  const router = createBrowserRouter([
+    {
+      path: '/', element: <Layout />,
+      children: [
+        { path: '/rooms', element: <AllRooms /> },
+        { path: '/login', element: <Login /> },
+        { path: '/register', element: <Register /> },
+        { path: '/chat/:roomId/', element: <ChatRoom /> },
+      ]
+    },
+
+  ]);
+
   return (
     <>
-      <Router>
-        
-        <Navbar />
-        <ToastContainer />
-
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-
-          <Route path='/' element={<Private />}>
-          <Route path="/chat/:roomId" element={<ChatRoom />} />
-          <Route path="/rooms" element={<AllRooms />} />
-
-
-          </Route>
-        </Routes>
-      </Router>
+      <RouterProvider router={router} />
     </>
   )
 }

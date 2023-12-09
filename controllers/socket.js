@@ -43,23 +43,25 @@ const handleConnection = (socket, io, userId, roomMembers) => {
   });
 
   socket.on('leaveRoom', (data) => {
-    socket.leave(data.room);
-    console.log(data);
+    socket.leave(data.roomId);
+    console.log(data.roomMembers);
     console.log("DISCONNECTED FROM ROOM");
 
-    const index = roomMembers[data.room]?.indexOf(userId);
-    if (index !== -1) {
-      roomMembers[data.room].splice(index, 1);
+   
+   if(data.roomMembers){
+    const index = data.roomMembers.indexOf(data.user);
+    if (index > -1) {
+      data.roomMembers.splice(index, 1);
     }
-
+    }
     const responseData = {
       message: `${data.user} left the room`,
       user: data.user,
       isSystemMessage: true,
-      members: roomMembers[data.room],
+      members: data.roomMembers,
     };
 
-    io.to(data.room).emit('disconnected-from-room', responseData);
+    io.to(data.roomId).emit('disconnected-from-room', responseData);
   });
 };
 
