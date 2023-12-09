@@ -11,7 +11,7 @@ const AllRooms = () => {
     const {token} = JSON.parse(localStorage.getItem('auth'));
     const {auth} = useAuth();
     const [roomId, setRoomId] = useState('');
-    const { rooms, setRooms } = useUpdate();
+    const { rooms, setRooms, loading, setLoading } = useUpdate();
     const navigate = useNavigate();
     const [roomdetails, setRoomDetails] = useState({
         roomPassword: ''
@@ -37,7 +37,25 @@ const AllRooms = () => {
     const handleCreateSubmit = async (e) => {
         e.preventDefault();
         const { roomName, roomUsers, roomCreatePassword } = roomCreateDetails;
-        const res = await createRoom(roomName, roomUsers, roomCreatePassword, token);
+        if(roomName.length < 3){
+            toast.warning('Room name must be at least 3 characters long');
+            return;
+        }else if(roomName.length > 30){
+            toast.warning('Room name must be less than 30 characters long');
+            return;
+        }else if(roomUsers < 2){
+            toast.warning('Room must have at least 2 members');
+            return;
+        }else if(roomUsers > 10){
+            toast.warning('Room must have less than 10 members');
+            return;
+        }else if(roomCreatePassword.length < 6){
+            toast.warning('Room password must be at least 6 characters long');
+            return;
+        }
+
+        setLoading(true);
+        const res = await createRoom(roomName, roomUsers, roomCreatePassword, token).finally(() => setLoading(false));
         if (res.status === 201) {
             toast(res.message, { type: 'success' });
             setRooms([...rooms, res.data]);
@@ -50,21 +68,19 @@ const AllRooms = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         const { roomPassword } = roomdetails;
-        const res = await verifyRoomPassword(roomId, roomPassword, token);
+        setLoading(true);
+        const res = await verifyRoomPassword(roomId, roomPassword, token).finally(() => setLoading(false));
         if (res.status === 200) {
             navigate(`/chat/${res.data}`);
-        } else if (res.status === 401) {
-            toast(res.error, { type: 'error' });
-        } else if (res.status === 404) {
-            toast(res.error, { type: 'error' });
-        } else {
+        }  else {
             toast(res.error, { type: 'error' });
         }
 
     }
 
     const handleDelete = async (roomId) => {
-        const res = await deleteRoom(roomId, token);
+        setLoading(true);
+        const res = await deleteRoom(roomId, token).finally(() => setLoading(false));
         if (res.status === 200) {
             toast(res.message, { type: 'success' });
             setRooms(rooms.filter((room) => room._id !== roomId));
@@ -75,7 +91,8 @@ const AllRooms = () => {
 
     useEffect(() => {
         const fetchRooms = async () => {
-            const data = await fetchAllActiveRooms(token);
+            setLoading(true);
+            const data = await fetchAllActiveRooms(token).finally(() => setLoading(false));
             setRooms(data);
         }
         fetchRooms();
@@ -98,9 +115,10 @@ const AllRooms = () => {
                                 <div className='d-flex justify-content-end'>
                                 {auth?.user?.username === room.roomCreator.username &&
                                  <button type="button" 
+                                 disabled={loading}
                                  onClick={() => handleDelete(room._id)}
                                  className="btn btn-danger mx-2">Delete</button>}
-                                <button onClick={() => setRoomId(room._id)} type="button" className="btn btn-success" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                                <button disabled={loading} onClick={() => setRoomId(room._id)} type="button" className="btn btn-success" data-bs-toggle="modal" data-bs-target="#exampleModal">
                                     Join Room
                                 </button>
                                 
@@ -132,7 +150,7 @@ const AllRooms = () => {
                                     <input type="password" onChange={handleChange} className="form-control" id="roomPassword" placeholder="Enter Room Password" />
                                 </div>
                                 <div className='d-flex justify-content-end'>
-                                <button type="submit" data-bs-dismiss="modal" className="btn btn-primary my-2">Submit</button>
+                                <button disabled={loading} type="submit" data-bs-dismiss="modal" className="btn btn-primary my-2">Submit</button>
                                 </div>
                             </form>
                         </div>
@@ -166,7 +184,7 @@ const AllRooms = () => {
                                     <input type="password" onChange={handleCreateChange} className="form-control" id="roomCreatePassword" placeholder="Enter Room Password" />
                                 </div>
                                 <div className='d-flex justify-content-end'>
-                                    <button type="submit" className="btn btn-primary">Submit</button>
+                                    <button disabled={loading} type="submit" className="btn btn-primary">Submit</button>
                                 </div>
                             </form>
                         </div>

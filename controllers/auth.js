@@ -1,6 +1,8 @@
 import User from "../models/user.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import {sendVerificationEmail, generateverificationToken} from "../utils/email.js"
+import {successFullVerification} from "../utils/emailTemplate.js"
 
 
 export const register = async (req, res) => {
@@ -8,16 +10,45 @@ export const register = async (req, res) => {
     try{
         const {username, email, password} = req.body;
         const existingUser = await User.findOne({email});
-        if(existingUser) return res.status(400).json({message: "User already exists"});
+        if(existingUser) return res.status(400).json({message: `User with email ${email} already exists`});
+        const doesUsernameExists = await User.findOne({username});
+        if(doesUsernameExists) return res.status(400).json({message: `Username ${username} already exists`});
         const hashedPassword = await bcrypt.hash(password, 12);
-        const result = await User.create({email, password: hashedPassword, username});
-        const token = jwt.sign({email: result.email, id: result._id}, process.env.JWT_SECRET);
-        res.status(201).json({user: result, token: token, message: "Registered and logged in successfully"});
+        const verificationToken = generateverificationToken(email);
+        await sendVerificationEmail(email.toLowerCase(), verificationToken);
+        const result = await User.create({email, password: hashedPassword, username, verificationToken});
+        res.status(201).json({user: result, message: `Verification email has been sent to ${email}`});
     }catch(error){
         res.status(500).json({message: error.message});
     }
 
 }
+
+
+export const verifyemail = async (req, res) => {
+    try {
+        const tokenId = req.params.tokenId;
+        console.log(tokenId);
+        const user = await User.findOne({ verificationToken: tokenId });
+        console.log(user);
+
+        if (!user) {
+            return res.status(404).json({ error: 'Invalid verification token.' });
+        }
+
+        user.isVerified = true;
+        user.verificationToken = null;
+        await user.save();
+
+        const congratulationContent = successFullVerification();
+
+        res.send(congratulationContent);
+
+    } catch (error) {
+        res.status(500).json({ error: 'An error occurred during email verification.' });
+        console.log(error);
+    }
+};
 
 export const login = async (req, res) => {
 
@@ -25,6 +56,7 @@ export const login = async (req, res) => {
         const {email, password} = req.body;
         const existingUser = await User.findOne({email});
         if(!existingUser) return res.status(404).json({message: "User doesn't exist"});
+        if(!existingUser.isVerified) return res.status(400).json({message: `Please verify your ${email} first`});
         const isPasswordCorrect = await bcrypt.compare(password, existingUser.password);
         if(!isPasswordCorrect) return res.status(400).json({message: "Invalid credentials"});
         const token = jwt.sign({email: existingUser.email, id: existingUser._id}, process.env.JWT_SECRET, {expiresIn: "1h"});

@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { register } from '../../helpers/auth/authFn';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/authContext';
+import { toast } from 'react-toastify';
+import { useUpdate } from '../../context/hasUpdated';
 
 
 const Login = () => {
 
     const navigate = useNavigate();
-    const [auth,setAuth] = useAuth();
+    const {loading, setLoading} = useUpdate()
 
     const [userCreds, setUser] = useState({
         username: '',
@@ -24,22 +26,27 @@ const Login = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log(userCreds);
-        const result = await register(userCreds);
-        const { loggedIn, message, user, token } = result;
-
-        if(loggedIn){
-            setAuth({
-                ...auth,
-                user,
-                token
-            })
-            alert(message);
-            navigate('/chats');
+        if(userCreds.username.length < 3){
+            toast.warning('Username must be at least 3 characters long');
+            return;
+        }else if(userCreds.password.length < 6){
+            toast.warning('Password must be at least 6 characters long');
+            return;
+        }else if(userCreds.username.length > 10){
+            toast.warning('Username must be less than 10 characters long');
             return;
         }
-
-        console.log(message);
+        setLoading(true);
+        const result = await register(userCreds).finally(() => setLoading(false));
+        if(result.status === 201){
+            toast.success(result.message);
+            navigate('/login');
+        }
+        else if(result.status === 400){
+            toast.warning(result.message);
+        }else{
+            toast.error(result.message);
+        }
     };
 
     return (
@@ -84,8 +91,8 @@ const Login = () => {
                                 />
                             </div>
                             <div className="my-3 d-flex justify-content-end">
-                                <button type="submit" className="btn btn-primary">
-                                    Submit
+                                <button type="submit" disabled={loading} className="btn btn-primary">
+                                    {loading ? 'Registering...' : 'Register'}
                                 </button>
                             </div>
                         </form>

@@ -32,18 +32,19 @@ export const verifyRoomPassword = async (roomId, roomPassword, token) => {
             },
             body: JSON.stringify({ roomPassword }),
         });
-        if(res.status === 401){
-            return {error: 'Incorrect Password', status: 401}
-        }else if(res.status === 404){
-            
-            return {error: 'Room Not Found', status: 404};
-        }
+        const data = await res.json();
+       
+        
         
         if(res.status === 200){
 
-            const data = await res.json();
+           
             return {data: data.room._id, status: 200};
          }
+
+        return {error: data.message, status: res.status};
+
+
 
     } catch (err) {
         return {error: 'Something went wrong', status: 500};

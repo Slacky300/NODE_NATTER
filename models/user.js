@@ -6,13 +6,15 @@ const userSchema = new mongoose.Schema({
         type: String,
         trim: true,
         maxlength: 32
+
     },
 
     username: {
         type: String,
         trim: true,
         required: true,
-        maxlength: 32
+        maxlength: 32,
+        unique: true
     },
 
     email: {
@@ -41,6 +43,15 @@ const userSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: "Room"
     }],
+
+    verificationToken: {
+        type: String
+    },
+
+    isVerified: {
+        type: Boolean,
+        default: false
+    },
 
 }, { timestamps: true });
 

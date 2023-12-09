@@ -176,13 +176,7 @@ const ChatRoom = () => {
           <div className='card' style={{ maxWidth: "50em", height: "80vh" }}>
             <div className='card-header text-center'>
               <h1>CHAT ROOM</h1>
-              <ul className='list-inline'>
-                {roomMembers && roomMembers?.map((member, index) => (
-                  <li className='list-inline-item' key={index}>
-                    {member}
-                  </li>
-                ))}
-              </ul>
+              
             </div>
             <div className='card-body d-flex flex-column'>
               {/* Chat messages container */}

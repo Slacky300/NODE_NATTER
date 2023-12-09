@@ -72,6 +72,9 @@ export const joinRoom = async (req, res) => {
         if (!isCorrectPassword) {
             return res.status(401).json({ message: 'Invalid password' });
         }
+        if(room.users.length >= room.maxUsers){
+            return res.status(409).json({ message: 'Room is full' });
+        }
         if(room.users.includes(req.user.id)){
             return res.status(200).json({room: room, message: `You have joined ${room.roomName}`});;
         }

@@ -3,12 +3,14 @@ import { login } from '../../helpers/auth/authFn';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/authContext';
 import { toast } from 'react-toastify';
+import { useUpdate } from '../../context/hasUpdated';
 
 
 const Login = () => {
 
     const navigate = useNavigate();
     const {auth,setAuth} = useAuth();
+    const {loading, setLoading} = useUpdate();
 
     const [userCreds, setUser] = useState({
         email: '',
@@ -24,8 +26,8 @@ const Login = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log(userCreds);
-        const result = await login(userCreds);
+        setLoading(true);
+        const result = await login(userCreds).finally(() => setLoading(false));
         const { message, user, token, status } = result;
 
         if(status === 200){
@@ -74,8 +76,8 @@ const Login = () => {
                                 />
                             </div>
                             <div className="my-3 d-flex justify-content-end">
-                                <button type="submit" className="btn btn-primary">
-                                    Submit
+                                <button disabled={loading} type="submit" className="btn btn-primary">
+                                    {loading ? 'Logging In...' : 'Login'}
                                 </button>
                             </div>
                         </form>

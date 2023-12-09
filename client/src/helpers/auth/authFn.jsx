@@ -44,11 +44,10 @@ export const register = async (user) => {
         });
         const data = await res.json();
         if (res.status === 201) {
-            localStorage.setItem('auth', JSON.stringify(data));
-            return {loggedIn: true, message: data.message, user: data.user, token: data.token};
+            return {status: 201, message: data.message};
         }
-        return {loggedIn: true, message: data.message};
+        return {status: 400 , message: data.message};
     } catch (error) {
-        console.log(error);
+        return {status: 500, message: error.message};
     }
 }
