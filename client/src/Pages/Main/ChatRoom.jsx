@@ -5,6 +5,7 @@ import { useParams } from 'react-router-dom';
 import ChatBubble from '../../components/ChatBubble.jsx';
 import { fetchMessages, sendMessage } from '../../helpers/chats/chatFn.jsx';
 import ReactRouterPrompt from 'react-router-prompt';
+import { useUpdate } from '../../context/hasUpdated.jsx';
 
 const ChatRoom = () => {
 
@@ -12,7 +13,6 @@ const ChatRoom = () => {
   const { auth } = useAuth();
   const { roomId } = useParams();
   const [isTyping, setIsTyping] = useState(false);
-
   const [roomMembers, setRoomMembers] = useState([]);
 
   const [typingUsers, setTypingUsers] = useState("");
@@ -51,19 +51,25 @@ const ChatRoom = () => {
     });
 
     socket.on('joinRoom', (data) => {
-      setRoomMembers((prevMembers) => [...prevMembers, data.members]);
       setSocketMessages((prevMessages) => [...prevMessages, data]);
+      setRoomMembers(data.roomMembers);
+     
+
     })
 
 
     socket.on('disconnected-from-room', (data) => {
-      setRoomMembers((prevMembers) => [...prevMembers, data.members]);
       setSocketMessages((prevMessages) => [...prevMessages, data]);
+      setRoomMembers(data.roomMembers);
+      
+
     });
 
     socket.on('typing', (data) => {
       setTypingUsers(data);
     });
+
+
 
     socket.on('stopTyping', (data) => {
       setTypingUsers('');
@@ -78,6 +84,12 @@ const ChatRoom = () => {
       socket.off('message-received');
       socket.off('joinRoom');
       socket.off('leaveRoom');
+      socket.off('disconnected-from-room');
+      socket.off('typing');
+      socket.off('stopTyping');
+      
+
+      
 
     };
   }, [socket]);
@@ -209,56 +221,85 @@ const ChatRoom = () => {
       </button>
       <div className='container my-5'>
         <div className='row d-flex mx-2  justify-content-center align-items-center'>
-      <div className='card '  style={{ maxWidth: "50em", height: "80vh" , border: "2px solid black"}}>
-        <div className='card-header text-center'>
-         
-          <span>
-            CHAT ROOM &nbsp; 
-            {typingUsers.length > 0 && !isTyping ? (
-            <span className='text-muted'><i> {typingUsers} is typing...</i></span>
-            ) : (
-              <></>
-            )}
-          </span>
-        </div>
-        <div className='card-body d-flex flex-column'>
-          {/* Chat messages container */}
-          <div
-            ref={messagesContainerRef}
-            className='flex-grow-1 overflow-auto'
-            style={{ maxHeight: '55vh' }}
-          >
-            {/* Display chat messages here */}
-            {socketMessages && socketMessages.map((msg, index) => (
-              <ChatBubble key={index}
-                isSent={msg.user.username ? msg?.user?.username === auth?.user?.username : true}
-                sender={msg?.user?.username}
-                message={msg.message}
-                system={msg.isSystemMessage} />
-            ))}
-          </div>
-          {/* Input and Send button */}
-          <div className='row align-items-end'>
-            <div className='col'>
-              <input
-                type='text'
-                className='form-control'
-                placeholder='Type your message...'
-                value={message}
-                onChange={(e) => { handleChange(e), typing() }}
-                onBlur={stopTyping}
-              />
+          <div className='card ' style={{ maxWidth: "50em", height: "80vh", border: "2px solid black" }}>
+            <div className='card-header '>
+
+              <span>
+                CHAT ROOM &nbsp;
+                {typingUsers.length > 0 && !isTyping ? (
+                  <span className='text-muted'><i> {typingUsers} is typing...</i></span>
+                ) : (
+                  <></>
+                )}
+              </span>
+
+              <button className="btn btn-dark float-end" data-bs-toggle="modal" data-bs-target="#showMembers" >Room Members</button>
+
+
             </div>
-            <div className='col-auto'>
-              <button onClick={handleSubmit} className='btn btn-primary'>
-                Send
-              </button>
+            <div className='card-body d-flex flex-column'>
+              {/* Chat messages container */}
+              <div
+                ref={messagesContainerRef}
+                className='flex-grow-1 overflow-auto'
+                style={{ maxHeight: '55vh' }}
+              >
+                {/* Display chat messages here */}
+                {socketMessages && socketMessages.map((msg, index) => (
+                  <ChatBubble key={index}
+                    isSent={msg.user.username ? msg?.user?.username === auth?.user?.username : true}
+                    sender={msg?.user?.username}
+                    message={msg.message}
+                    system={msg.isSystemMessage} />
+                ))}
+              </div>
+              {/* Input and Send button */}
+              <div className='row align-items-end'>
+                <div className='col'>
+                  <input
+                    type='text'
+                    className='form-control'
+                    placeholder='Type your message...'
+                    value={message}
+                    onChange={(e) => { handleChange(e), typing() }}
+                    onBlur={stopTyping}
+                  />
+                </div>
+                <div className='col-auto'>
+                  <button onClick={handleSubmit} className='btn btn-primary'>
+                    Send
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+
+      <div className="modal fade" id="showMembers" tabIndex={-1} aria-labelledby="showMemLbl" aria-hidden="true">
+        <div className="modal-dialog">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h1 className="modal-title fs-5" id="showMemLbl">Current Room Members</h1>
+              <button type="button" className="btn-close" data-bs-dismiss="modal" aria-label="Close" />
+            </div>
+            <div className="modal-body">
+              <ul>
+                {roomMembers && Object.values(roomMembers).map((user, index) => (
+                  <li key={index}>{user.username}</li>
+                ))}
+
+              </ul>
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
           </div>
         </div>
       </div>
-      </div>
-      </div>
+
 
     </>
 

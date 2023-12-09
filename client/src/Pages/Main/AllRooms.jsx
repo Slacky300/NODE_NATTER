@@ -11,7 +11,7 @@ const AllRooms = () => {
     const {token} = JSON.parse(localStorage.getItem('auth'));
     const {auth} = useAuth();
     const [roomId, setRoomId] = useState('');
-    const { rooms, setRooms, loading, setLoading } = useUpdate();
+    const { rooms, setRooms, loading, setLoading,  activeMembers, setActiveMembers } = useUpdate();
     const navigate = useNavigate();
     const [roomdetails, setRoomDetails] = useState({
         roomPassword: ''
@@ -98,13 +98,18 @@ const AllRooms = () => {
         fetchRooms();
     }, [])
 
+    const getActiveMembersCount = (roomId) => {
+        const roomEntry = activeMembers.find(entry => entry.roomId === roomId);
+        return roomEntry ? roomEntry.members : 0;
+      };
+      
+
     return (
         <>
             <div className='container'>
                 <div className='row my-3 d-flex justify-content-center align-items-center'>
                     <div className='col-12'>
                         <h1>All Rooms</h1>
-                        {console.log(rooms)}
                     </div>
                     {rooms?.map((room, index) => (
                         <div key={index} className="card mx-5 my-5" style={{ width: '18rem' }}>

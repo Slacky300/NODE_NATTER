@@ -1,37 +1,57 @@
-export const socketCtrl = (io) => {
-  const roomMembers = {}; // Initialize room members outside of handleConnection
+const activeUsers = {};
 
+export const socketCtrl = (io) => {
   io.on('connection', (socket) => {
     const userId = socket.id;
 
-    handleConnection(socket, io, userId, roomMembers);
+    handleConnection(socket, io, userId);
   });
 };
 
-const handleConnection = (socket, io, userId, roomMembers) => {
+const handleConnection = (socket, io, userId) => {
+  activeUsers[userId] = { username: '', room: '' };
+
   logUserConnected(userId);
 
-  socket.on('joinRoom', (roomName, userId) => {
+  socket.on('joinRoom', (roomName, username) => {
     socket.join(roomName);
+    activeUsers[userId] = { username, room: roomName };
 
-    if (!roomMembers[roomName]) {
-      roomMembers[roomName] = [];
-    }
-    if (!roomMembers[roomName].includes(userId)) {
-      roomMembers[roomName].push(userId);
-    }
+    socket.room = roomName;
+
 
     const responseData = {
-      message: `${userId} joined the room`,
-      user: userId,
+      message: `${username} joined the room`,
+      user: username,
       isSystemMessage: true,
-      members: roomMembers[roomName],
+      roomMembers: activeUsers,
     };
 
-    io.to(roomName).emit('joinRoom', responseData);
+    io.to(socket.room).emit('joinRoom', responseData);
+  });
+
+  socket.on('disconnect', () => {
+    const disconnectedUser = activeUsers[userId];
+    console.log(disconnectedUser)
+
+    if(!disconnectedUser) return;
+
+    const responseData = {
+      message: disconnectedUser ? `${disconnectedUser.username} left the room` : '',
+      user: disconnectedUser? disconnectedUser.username : '',
+      isSystemMessage: true,
+      roomMembers: activeUsers,
+    };
+    if(activeUsers[userId]){
+      delete activeUsers[userId];
+
+    }
+
+    io.to(socket.room).emit('disconnected-from-room', responseData);
   });
 
   socket.on('message-sent', (data) => {
+    socket.room = data.room;
     const responseData = {
       message: data.message,
       user: {
@@ -39,20 +59,24 @@ const handleConnection = (socket, io, userId, roomMembers) => {
       },
       system: false,
     };
-    io.to(data.room).emit('message-received', responseData);
+    io.to(socket.room).emit('message-received', responseData);
   });
 
   socket.on('leaveRoom', (data) => {
     socket.leave(data.roomId);
+    socket.room = data.roomId;
 
     const responseData = {
       message: `${data.user} left the room`,
       user: data.user,
       isSystemMessage: true,
-      members: data.roomMembers,
+      roomMembers: activeUsers,
     };
 
-    io.to(data.roomId).emit('disconnected-from-room', responseData);
+    delete activeUsers[userId];
+
+
+    io.to(socket.room).emit('disconnected-from-room', responseData);
   });
 
   socket.on('typing', (data) => {

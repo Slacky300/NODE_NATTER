@@ -49,7 +49,7 @@ const Navbar = () => {
                   </li>
                   <li className="nav-item">
                    
-                      <button className="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#createRoomModal">Create Room</button>
+                      <button className="btn btn-primary me-2 mb-2" data-bs-toggle="modal" data-bs-target="#createRoomModal">Create Room</button>
      
                   </li>
                   <li className="nav-item">

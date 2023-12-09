@@ -5,6 +5,10 @@ const UpdateContext = createContext();
 export const UpdateProvider = ({ children }) => {
   const [shouldUpdate, setShouldUpdate] = useState(false);
   const [rooms, setRooms] = useState([]);
+  const [activeMembers, setActiveMembers] = useState([{
+    roomId: "",
+    members: 0
+  }]); // [
   const [loading, setLoading] = useState(false);
 
   const triggerUpdate = () => {
@@ -13,7 +17,7 @@ export const UpdateProvider = ({ children }) => {
 
 
   return (
-    <UpdateContext.Provider value={{ shouldUpdate, triggerUpdate, rooms, setRooms, loading, setLoading }}>
+    <UpdateContext.Provider value={{ shouldUpdate, triggerUpdate, rooms, setRooms, loading, setLoading, activeMembers, setActiveMembers }}>
       {children}
     </UpdateContext.Provider>
   );
