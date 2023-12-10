@@ -44,6 +44,8 @@ const handleConnection = (socket, io, userId) => {
 
     if (!disconnectedUser) return;
 
+    socket.leave(socket.room);
+
     // Handle user disconnection from each room
     disconnectedUser.rooms.forEach((room) => {
       const responseData = {
