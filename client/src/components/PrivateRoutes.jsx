@@ -1,16 +1,13 @@
-import { Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from '../context/authContext';
-const Private = () => {
-    const token = localStorage.getItem('auth');
-    const {auth} = useAuth();
+import { Navigate } from "react-router-dom";
+import { getLocalStorageWithExpiry } from "../helpers/auth/authFn";
 
-
-
-    return (
-        <>
-            {token || auth?.token ? <Outlet /> : <Navigate to="/login" />}
-        </>
-    );
+export const PrivateRoutes = ({ children }) => {
+    const token = getLocalStorageWithExpiry('auth')?.token;
+  if (!token) {
+    // user is not authenticated
+    return <Navigate to="/" />;
+  }
+  return children;
 };
 
-export default Private;
+export default PrivateRoutes;

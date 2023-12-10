@@ -18,7 +18,7 @@ function App() {
         { path: '/login', element: <Login /> },
         { path: '/register', element: <Register /> },
         { path:  '/rooms', element: <AllRooms /> },
-        { path:  '/chat/:roomId/' , element:<ChatRoom />  },
+        { path:  '/chat/:roomId/:roomName' , element:<ChatRoom />  },
       ],
     },
   ]);

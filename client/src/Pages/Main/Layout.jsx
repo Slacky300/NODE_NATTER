@@ -7,23 +7,19 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Login from '../Auth/Login';
 import { getLocalStorageWithExpiry } from '../../helpers/auth/authFn';
+
+import LandingPage from '../Main/LandingPage';
 const Layout = () => {
 
     const token = getLocalStorageWithExpiry('auth')?.token;
+    
    
 
     return (
         <>
             <header><Navbar/></header>
            
-                {token? <Outlet /> : <Login/>}
-
-            
-                
-                        
-              
-     
-       
+                 <Outlet /> 
 
             <ToastContainer
                 position="top-right"

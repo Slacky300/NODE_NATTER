@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import { getLocalStorageWithExpiry } from "../helpers/auth/authFn";
 
 const AuthContext = createContext();
 
@@ -8,22 +9,27 @@ const AuthProvider = ({ children }) => {
     token: ""
   });
 
+  const [hasEnteredPassword, setHasEnteredPassword] = useState(false);
+
   useEffect(() => {
-    const data = localStorage.getItem('auth');
+    const data = getLocalStorageWithExpiry("auth");
+
     if (data) {
-        const parseData = JSON.parse(data);
+       
         setAuth(prevAuth => ({
             ...prevAuth,
-            user: parseData.user,
-            token: parseData.token
+            user: data.user,
+            token: data.token
         }));
+
+
     }
 }, []);
 
 
 
   return (
-    <AuthContext.Provider value={{ auth, setAuth }}>
+    <AuthContext.Provider value={{ auth, setAuth, hasEnteredPassword, setHasEnteredPassword }}>
       {children}
     </AuthContext.Provider>
   );

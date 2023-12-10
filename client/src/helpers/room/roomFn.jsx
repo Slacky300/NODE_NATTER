@@ -39,7 +39,7 @@ export const verifyRoomPassword = async (roomId, roomPassword, token) => {
         if(res.status === 200){
 
            
-            return {data: data.room._id, status: 200};
+            return {data: data.room._id, status: 200, name: data.room.roomName};
          }
 
         return {error: data.message, status: res.status};
