@@ -4,12 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import { fetchAllActiveRooms, verifyRoomPassword, createRoom, deleteRoom } from '../../helpers/room/roomFn.jsx';
 import { toast } from 'react-toastify';
 import { useUpdate } from '../../context/hasUpdated.jsx';
-
+import { getLocalStorageWithExpiry } from '../../helpers/auth/authFn.jsx';
 
 const AllRooms = () => {
 
-    const {token} = JSON.parse(localStorage.getItem('auth'));
+    const token = getLocalStorageWithExpiry('auth')?.token;
     const {auth} = useAuth();
+    console.log(auth);
     const [roomId, setRoomId] = useState('');
     const { rooms, setRooms, loading, setLoading,  activeMembers, setActiveMembers } = useUpdate();
     const navigate = useNavigate();

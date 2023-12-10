@@ -1,37 +1,33 @@
-import { RouterProvider, createBrowserRouter } from 'react-router-dom'
-import './App.css'
-import Navbar from './components/Navbar'
-import Private from './components/PrivateRoutes';
+import { RouterProvider, createBrowserRouter } from 'react-router-dom';
+import './App.css';
 import Login from './Pages/Auth/Login';
 import Register from './Pages/Auth/Register';
 import ChatRoom from './Pages/Main/ChatRoom';
 import AllRooms from './Pages/Main/AllRooms';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import Layout from './Pages/Main/Layout';
-
+import LandingPage from './Pages/Main/LandingPage';
 
 function App() {
 
-   
   const router = createBrowserRouter([
     {
-      path: '/', element: <Layout />,
+      path: '/',
+      element: <Layout />,
       children: [
-        { path: '/rooms', element: <AllRooms /> },
+        { path: '/', element: <LandingPage /> },
         { path: '/login', element: <Login /> },
         { path: '/register', element: <Register /> },
-        { path: '/chat/:roomId/', element: <ChatRoom /> },
-      ]
+        { path:  '/rooms', element: <AllRooms /> },
+        { path:  '/chat/:roomId/' , element:<ChatRoom />  },
+      ],
     },
-
   ]);
 
   return (
     <>
       <RouterProvider router={router} />
     </>
-  )
+  );
 }
 
-export default App
+export default App;

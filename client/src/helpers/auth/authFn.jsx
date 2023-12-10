@@ -1,4 +1,25 @@
-import { useAuth } from "../../context/authContext";
+export const setLocalStorageWithExpiry = (key, data, expirationMinutes) => {
+    const now = new Date();
+    const item = {
+        data: data,
+        expiry: now.getTime() + expirationMinutes * 60 * 1000, // Expiration in 1 hour
+    };
+    localStorage.setItem(key, JSON.stringify(item));
+}
+
+export const getLocalStorageWithExpiry = (key) => {
+    const itemStr = localStorage.getItem(key);
+    if (!itemStr) {
+        return null;
+    }
+    const item = JSON.parse(itemStr);
+    const now = new Date();
+    if (now.getTime() > item.expiry) {
+        localStorage.removeItem(key);
+        return null; // Item has expired
+    }
+    return item.data;
+}
 
 
 export const login = async (user) => {
@@ -18,10 +39,11 @@ export const login = async (user) => {
         });
         const data = await res.json();
         if (res.status === 200) {
-            localStorage.setItem('auth', JSON.stringify(data));
-            return {status: 200, user: data.user, token: data.token, message: data.message};
+
+            setLocalStorageWithExpiry('auth', data, 60); // 60 minutes expiration
+            return { status: 200, user: data.user, token: data.token, message: data.message };
         }
-        return {status: 500, message: data.message};
+        return { status: 500, message: data.message };
 
     } catch (error) {
         console.log(error);
@@ -44,10 +66,10 @@ export const register = async (user) => {
         });
         const data = await res.json();
         if (res.status === 201) {
-            return {status: 201, message: data.message};
+            return { status: 201, message: data.message };
         }
-        return {status: 400 , message: data.message};
+        return { status: 400, message: data.message };
     } catch (error) {
-        return {status: 500, message: error.message};
+        return { status: 500, message: error.message };
     }
 }

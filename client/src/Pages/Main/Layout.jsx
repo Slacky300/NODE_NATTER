@@ -5,16 +5,18 @@ import Navbar  from '../../components/Navbar';
 
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Login from '../Auth/Login';
+import { getLocalStorageWithExpiry } from '../../helpers/auth/authFn';
 const Layout = () => {
 
-    const token = localStorage.getItem('token')
+    const token = getLocalStorageWithExpiry('auth')?.token;
    
 
     return (
         <>
             <header><Navbar/></header>
            
-                <Outlet />
+                {token? <Outlet /> : <Login/>}
 
             
                 

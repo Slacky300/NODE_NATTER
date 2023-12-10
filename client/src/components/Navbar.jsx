@@ -1,10 +1,14 @@
 import React from 'react';
 import { useAuth } from '../context/authContext';
 import { Link, useNavigate } from 'react-router-dom'; 
+import { getLocalStorageWithExpiry } from '../helpers/auth/authFn';
+import Person from '../assets/icons/person-fill.svg';
+
 
 const Navbar = () => {
-  const {auth, setAuth} = useAuth();
+  const token = getLocalStorageWithExpiry('auth')?.token;
   const navigate = useNavigate(); 
+  const { auth, setAuth } = useAuth();
   const handleLogout = () => {
     localStorage.removeItem('auth');
     setAuth({
@@ -20,7 +24,7 @@ const Navbar = () => {
       <nav className="navbar navbar-expand-lg bg-body-tertiary">
         <div className="container-fluid">
           <Link className="navbar-brand" to="/">
-            Socket Chat {auth.user ? ` - ${auth.user.username}` : ''}
+            Chat Nest &nbsp;{auth.user ? `- ${auth.user.username}` : ''}
           </Link>
           <button
             className="navbar-toggler"
@@ -40,7 +44,7 @@ const Navbar = () => {
                   Home
                 </Link>
               </li>
-              {auth.user ? (
+              {token ? (
                 <>
                   <li className="nav-item">
                     <Link className="nav-link" to="/rooms">

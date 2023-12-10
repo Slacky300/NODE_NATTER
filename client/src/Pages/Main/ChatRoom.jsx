@@ -5,8 +5,7 @@ import { useParams } from 'react-router-dom';
 import ChatBubble from '../../components/ChatBubble.jsx';
 import { fetchMessages, sendMessage } from '../../helpers/chats/chatFn.jsx';
 import ReactRouterPrompt from 'react-router-prompt';
-import { useUpdate } from '../../context/hasUpdated.jsx';
-
+import { getLocalStorageWithExpiry } from '../../helpers/auth/authFn.jsx';
 const ChatRoom = () => {
 
 
@@ -14,11 +13,10 @@ const ChatRoom = () => {
   const { roomId } = useParams();
   const [isTyping, setIsTyping] = useState(false);
   const [roomMembers, setRoomMembers] = useState([]);
-
   const [typingUsers, setTypingUsers] = useState("");
-
   const [message, setMessage] = useState('');
   const messagesContainerRef = useRef(null);
+
   const [socketMessages, setSocketMessages] = useState([{
     message: "Welcome to the chat room",
     user: {
@@ -33,31 +31,35 @@ const ChatRoom = () => {
   }
 
 
+
+  //To join the respective room on page load
   useEffect(() => {
+
     socket.emit('joinRoom', roomId, auth?.user?.username);
-
-
     return () => {
       socket.off('joinRoom');
     };
+
   }, [roomId, auth?.user?.username]);
 
+
+  //This useEffect is to listen to the socket events
   useEffect(() => {
 
 
-
+    //This event is to listen to the messages sent by other users
     socket.on('message-received', (data) => {
       setSocketMessages((prevMessages) => [...prevMessages, data]);
     });
 
+
+    //This event is triggered when a user joins the room
     socket.on('joinRoom', (data) => {
       setSocketMessages((prevMessages) => [...prevMessages, data]);
       setRoomMembers(data.roomMembers);
-     
-
     })
 
-
+    //This event is triggered when a user leaves the room
     socket.on('disconnected-from-room', (data) => {
       setSocketMessages((prevMessages) => [...prevMessages, data]);
       setRoomMembers(data.roomMembers);
@@ -65,12 +67,13 @@ const ChatRoom = () => {
 
     });
 
+    //This is to emit the typing event
     socket.on('typing', (data) => {
       setTypingUsers(data);
     });
 
 
-
+    //This is to emit the stopTyping event
     socket.on('stopTyping', (data) => {
       setTypingUsers('');
       console.log(typingUsers);
@@ -79,7 +82,7 @@ const ChatRoom = () => {
 
 
 
-
+    //This is to remove the event listeners
     return () => {
       socket.off('message-received');
       socket.off('joinRoom');
@@ -87,20 +90,16 @@ const ChatRoom = () => {
       socket.off('disconnected-from-room');
       socket.off('typing');
       socket.off('stopTyping');
-      
-
-      
-
     };
   }, [socket]);
 
 
-
+  //This useEffect is to fetch the messages from the database
   useEffect(() => {
 
     const getMessages = async () => {
 
-      const res = await fetchMessages(roomId, JSON.parse(localStorage.getItem('auth')).token);
+      const res = await fetchMessages(roomId, getLocalStorageWithExpiry('auth')?.token);
       if (res.status === 200) {
         const messages = res.data.map((msg) => {
           return {
@@ -130,6 +129,8 @@ const ChatRoom = () => {
     }
   }, [socketMessages]);
 
+
+  //This function is to handle the submit event i.e. when the user sends a message it submits the message to the server
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -138,7 +139,7 @@ const ChatRoom = () => {
     try {
 
 
-
+      //This is to emit the message to the server
       socket.emit('message-sent', { message, user: auth?.user?.username, room: roomId });
 
       const newMessage = message
@@ -155,10 +156,12 @@ const ChatRoom = () => {
     }
   };
 
+  //This function is to show the confirmation modal i.e when the user trys to leave the chat room
   const showModel = () => {
     const btn = document.getElementById('queyBtn');
     btn.click();
   }
+
 
   const leaveRoom = () => {
     socket.emit('leaveRoom', { roomId, user: auth?.user?.username, roomMembers: roomMembers });
@@ -176,6 +179,7 @@ const ChatRoom = () => {
     socket.emit('stopTyping', { user: auth?.user?.name, room: roomId });
   };
 
+  //This useEffect is to emit the stopTyping event when the user stops typing
   useEffect(() => {
 
     if (message.trim() === '') {
@@ -226,7 +230,7 @@ const ChatRoom = () => {
 
               <span>
                 CHAT ROOM &nbsp;
-                {typingUsers.length > 0 && !isTyping ? (
+                {typingUsers?.length > 0 && !isTyping ? (
                   <span className='text-muted'><i> {typingUsers} is typing...</i></span>
                 ) : (
                   <></>
@@ -245,15 +249,14 @@ const ChatRoom = () => {
                 style={{ maxHeight: '55vh' }}
               >
                 {/* Display chat messages here */}
-                {socketMessages && socketMessages.map((msg, index) => (
+                {socketMessages && socketMessages?.map((msg, index) => (
                   <ChatBubble key={index}
-                    isSent={msg.user.username ? msg?.user?.username === auth?.user?.username : true}
+                    isSent={msg?.user?.username ? msg?.user?.username === auth?.user?.username : true}
                     sender={msg?.user?.username}
-                    message={msg.message}
-                    system={msg.isSystemMessage} />
+                    message={msg?.message}
+                    system={msg?.isSystemMessage} />
                 ))}
               </div>
-              {/* Input and Send button */}
               <div className='row align-items-end'>
                 <div className='col'>
                   <input
@@ -277,7 +280,7 @@ const ChatRoom = () => {
 
       </div>
 
-
+                  {console.log(auth?.user?.username)}
       <div className="modal fade" id="showMembers" tabIndex={-1} aria-labelledby="showMemLbl" aria-hidden="true">
         <div className="modal-dialog">
           <div className="modal-content">
@@ -288,7 +291,7 @@ const ChatRoom = () => {
             <div className="modal-body">
               <ul>
                 {roomMembers && Object.values(roomMembers).map((user, index) => (
-                  <li key={index}>{user.username}</li>
+                  <li key={index}>{user?.username}</li>
                 ))}
 
               </ul>

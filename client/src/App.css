@@ -9,3 +9,17 @@
   border-radius: 10px;
   background-color: #e0e0e0; /* Set the background color of the chat bubble */
 }
+
+@media (max-width: 768px) {
+  .landing-page-image {
+      max-height: 30em; /* Adjust the height as needed */
+  }
+
+  .imageCnt{
+    margin-top: -4em;
+  }
+  .heroSct{
+    margin-top: 4em;
+  }
+}
+
