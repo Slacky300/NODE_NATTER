@@ -10,7 +10,8 @@
   background-color: #e0e0e0; /* Set the background color of the chat bubble */
 }
 .hBtn{
-  z-index: 1000;
+  position: relative;
+  z-index: 9999999;
 }
 
 @media (max-width: 768px) {
