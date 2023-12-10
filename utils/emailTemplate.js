@@ -133,7 +133,7 @@ export const successFullVerification = (username) => {
         <p>You have successfully verified your email.</p>
         <div style="text-align: center; margin-top: 20px;">
           <p>You can now proceed to the home page by clicking the button below:</p>
-          <a href="${process.env.FRONTEND_URL}/login" class="btn-home">Go to Home Page</a>
+          <a href="${process.env.FRONTEND_URL}" class="btn-home">Go to Home Page</a>
         </div>
       </div>
     </body>
