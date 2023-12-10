@@ -9,6 +9,9 @@
   border-radius: 10px;
   background-color: #e0e0e0; /* Set the background color of the chat bubble */
 }
+.hBtn{
+  z-index: 1000;
+}
 
 @media (max-width: 768px) {
   .landing-page-image {
