@@ -21,11 +21,11 @@ const LandingPage = () => {
                         </p>
                         {token ? (
                             <Link to='/rooms'>
-                            <button className="btn btn-primary">Go to Rooms</button>
+                            <button className="btn btn-primary hBtn">Go to Rooms</button>
                             </Link>
                         ) : (
                             <Link to='/login'>
-                                <button  className="btn btn-primary">Login</button>
+                                <button  className="btn btn-primary hBtn">Login</button>
                             </Link>
                         )}
                     </div>
