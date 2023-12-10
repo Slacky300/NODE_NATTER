@@ -7,7 +7,7 @@ import HowItWorks from '../../assets/how-it-works.png';
 import { getLocalStorageWithExpiry } from '../../helpers/auth/authFn';
 
 const LandingPage = () => {
-    const token = getLocalStorageWithExpiry('auth')?.token;
+    const token = getLocalStorageWithExpiry('auth');
 
     return (
         <>
@@ -15,9 +15,9 @@ const LandingPage = () => {
                 {/* Hero Section */}
                 <div className="row d-flex heroSct justify-content-center align-items-center">
                     <div className="col-md-6">
-                        <h1 className="display-1">Welcome to Chat Nest</h1>
+                        <h1 className="display-1">Welcome to Node Natter</h1>
                         <p className="lead">
-                            Chat Nest is a real-time chat application that empowers users to create chat rooms and engage in dynamic conversations.
+                        Node Natter is a real-time chat application that empowers users to create chat rooms and engage in dynamic conversations.
                         </p>
                         {token ? (
                             <Link to='/rooms' className="btn btn-primary btn-lg">Go to Chat Rooms</Link>

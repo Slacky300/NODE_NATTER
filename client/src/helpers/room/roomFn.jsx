@@ -103,3 +103,39 @@ export const deleteRoom = async (roomId, token) => {
         return {error: 'Something went wrong', status: 500};
     }
 }
+
+export const editRoomPassword = async (roomId, roomPassword, token) => {
+
+    try {
+        const res = await fetch(`${import.meta.env.VITE_APP_BACKEND_URL}/rooms/edit/${roomId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ roomPassword }),
+        });
+        const data = await res.json();  
+        if(res.status === 404){
+            return {error: data.message, status: 404}
+        }else if(res.status === 200){
+            
+            return {message: data.message, status: 200};
+        }
+        return {error: 'Something went wrong', status: 500};
+        
+    
+    } catch (err) {
+        return {error: 'Something went wrong', status: 500};
+    }
+}
+
+export const extractBaseUrl = (url) => {
+    try {
+      const parsedUrl = new URL(url);
+      return `${parsedUrl.protocol}//${parsedUrl.host}`;
+    } catch (error) {
+      console.error("Invalid URL:", error.message);
+      return null;
+    }
+  }

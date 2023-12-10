@@ -8,6 +8,7 @@ import ReactRouterPrompt from 'react-router-prompt';
 import { getLocalStorageWithExpiry } from '../../helpers/auth/authFn.jsx';
 import CopyButton from '../../components/CopyButton.jsx';
 import { useUpdate } from '../../context/hasUpdated.jsx';
+import { extractBaseUrl } from '../../helpers/room/roomFn.jsx';
 
 
 const ChatRoom = () => {
@@ -74,7 +75,7 @@ const ChatRoom = () => {
         },
         user: data.roomMembersCount,
       })
-      
+
     });
 
     socket.on('disconnected-from-room', (data) => {
@@ -221,7 +222,7 @@ const ChatRoom = () => {
 
 
 
-  const chatRoomInvitationText = `Hey, I'm inviting you to join the chat room ${roomName} on Chat Nest. Ask me for the password if you need it.`
+  const chatRoomInvitationText = `Hey, I'm inviting you to join the chat room ${roomName} on Chat Nest App - ${extractBaseUrl(window.location.href)} ask me for the password when it is prompted.`
 
 
 
@@ -262,12 +263,11 @@ const ChatRoom = () => {
         Launch demo modal
       </button>
       <div className='container my-5'>
-        <div className='row d-flex mx-2  justify-content-center align-items-center'>
-          <div className='card ' style={{ maxWidth: "50em", height: "80vh", border: "2px solid black" }}>
-            <div className='card-header '>
-
+        <div className='row d-flex  justify-content-center align-items-center'>
+          <div className='form-control' style={{ maxWidth: "50em", height: "80vh", border: "2px solid black", display: "flex", flexDirection: "column" }}>
+            <div className='card-header' style={{ borderBottom: "2px solid black", minHeight: "4em", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <span className='text-center'>
-                <span className='display-6'>{roomName}'s ROOM</span> &nbsp;
+                <span className=''>{roomName}'s ROOM</span>&nbsp;
                 {typingUsers?.length > 0 && !isTyping ? (
                   <span className='text-muted'><i> {typingUsers} is typing...</i></span>
                 ) : (
@@ -275,12 +275,17 @@ const ChatRoom = () => {
                 )}
               </span>
 
-
-              <button className="btn btn-dark float-end" data-bs-toggle="modal" data-bs-target="#showMembers" >Room Members</button>
-              <span className='float-end mx-3'><CopyButton textToCopy={chatRoomInvitationText} /></span>
-
-
+              <div className="d-flex flex-row-reverse">
+                <button className="btn btn-dark me-2" data-bs-toggle="modal" data-bs-target="#showMembers">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-people" viewBox="0 0 16 16">
+                    <path d="M15 14s1 0 1-1-1-4-5-4-5 3-5 4 1 1 1 1zm-7.978-1A.261.261 0 0 1 7 12.996c.001-.264.167-1.03.76-1.72C8.312 10.629 9.282 10 11 10c1.717 0 2.687.63 3.24 1.276.593.69.758 1.457.76 1.72l-.008.002a.274.274 0 0 1-.014.002H7.022ZM11 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4m3-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0M6.936 9.28a5.88 5.88 0 0 0-1.23-.247A7.35 7.35 0 0 0 5 9c-4 0-5 3-5 4 0 .667.333 1 1 1h4.216A2.238 2.238 0 0 1 5 13c0-1.01.377-2.042 1.09-2.904.243-.294.526-.569.846-.816M4.92 10A5.493 5.493 0 0 0 4 13H1c0-.26.164-1.03.76-1.724.545-.636 1.492-1.256 3.16-1.275ZM1.5 5.5a3 3 0 1 1 6 0 3 3 0 0 1-6 0m3-2a2 2 0 1 0 0 4 2 2 0 0 0 0-4" />
+                  </svg>
+                </button>
+                <span className='me-2'><CopyButton textToCopy={chatRoomInvitationText} /></span>
+              </div>
             </div>
+
+
             <div className='card-body d-flex flex-column'>
               {/* Chat messages container */}
               <div
@@ -319,7 +324,7 @@ const ChatRoom = () => {
         </div>
 
       </div>
-\
+      \
 
       <div className="modal fade" id="showMembers" tabIndex={-1} aria-labelledby="showMemLbl" aria-hidden="true">
         <div className="modal-dialog">

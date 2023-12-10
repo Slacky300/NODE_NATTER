@@ -12,7 +12,7 @@ export const generateverificationToken = (email) => {
 }
 
 
-export const sendVerificationEmail = async (recipientEmail, verificationToken) => {
+export const sendVerificationEmail = async (recipientEmail, verificationToken, username) => {
     try {
         const transporter = nodemailer.createTransport({
             service: 'gmail',
@@ -23,7 +23,7 @@ export const sendVerificationEmail = async (recipientEmail, verificationToken) =
 
         })
 
-        const emailcontent = gmailContent(verificationToken);
+        const emailcontent = gmailContent(verificationToken,username);
 
         await transporter.sendMail({
             from: process.env.EMAIL,

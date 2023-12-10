@@ -149,3 +149,24 @@ export const deleteRoom = async (req, res) => {
         res.status(404).json({ message: error.message });
     }
 }
+
+
+export const editRoomPassword = async (req, res) => {
+
+    const { id } = req.params;
+    const { roomPassword } = req.body;
+
+    try {
+        const room = await Room.findById(id);
+        if(!room){
+            return res.status(404).json({ message: 'Room not found' });
+        }
+        const hashedPassword = await bcrypt.hash(roomPassword, 12);
+        room.roomPassword = hashedPassword;
+        await room.save();
+        res.status(200).json({room: room, message: `You have changed the password of ${room.roomName}`});
+    } catch (error) {
+        res.status(404).json({ message: error.message });
+    }
+}
+

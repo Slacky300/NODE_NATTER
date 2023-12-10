@@ -15,7 +15,7 @@ export const register = async (req, res) => {
         if(doesUsernameExists) return res.status(400).json({message: `Username ${username} already exists`});
         const hashedPassword = await bcrypt.hash(password, 12);
         const verificationToken = generateverificationToken(email);
-        await sendVerificationEmail(email.toLowerCase(), verificationToken);
+        await sendVerificationEmail(email.toLowerCase(), verificationToken, username);
         const result = await User.create({email, password: hashedPassword, username, verificationToken});
         res.status(201).json({user: result, message: `Verification email has been sent to ${email}`});
     }catch(error){
@@ -40,7 +40,7 @@ export const verifyemail = async (req, res) => {
         user.verificationToken = null;
         await user.save();
 
-        const congratulationContent = successFullVerification();
+        const congratulationContent = successFullVerification(user.username);
 
         res.send(congratulationContent);
 
