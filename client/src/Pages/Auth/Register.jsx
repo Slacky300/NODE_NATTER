@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { register } from '../../helpers/auth/authFn';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link} from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useUpdate } from '../../context/hasUpdated';
 
@@ -53,12 +53,12 @@ const Login = () => {
             <div className="container my-5" style={{ maxWidth: '50em' }}>
                 <div className="row d-flex justify-content-center align-items-center">
                     <div className="col-6 d-flex justify-content-center align-items-center">
-                        <h1>REGISTER</h1>
+                        <h1 className='display-3'>REGISTER</h1>
                     </div>
                 </div>
-                <div className="row my-5 d-flex justify-content-center align-items-center">
-                    <div className="col-6">
-                        <form onSubmit={handleSubmit}>
+                <div className="row my-5 d-flex justify-content-center align-items-center" >
+                    <div className="col-md-6">
+                        <form onSubmit={handleSubmit} className='form-control'>
                         <div className="form-group">
                                 <label htmlFor="username">Username</label>
                                 <input
@@ -95,6 +95,10 @@ const Login = () => {
                                 </button>
                             </div>
                         </form>
+                        <p className="my-3 text-center">
+                            Already have an account?{' '}
+                            <Link to="/login">Login here</Link>
+                        </p>
                     </div>
                 </div>
             </div>

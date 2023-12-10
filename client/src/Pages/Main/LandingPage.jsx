@@ -63,7 +63,7 @@ const LandingPage = () => {
                 <hr />
 
                 {/* How It Works Section */}
-                <div className="row ms-5 d-flex justify-content-center align-items-center">
+                <div className="row  d-flex justify-content-center align-items-center">
                     <div className="col-md-12 text-center">
                         <h2 className="display-2">How It Works</h2>
                     </div>

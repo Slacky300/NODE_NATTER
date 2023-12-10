@@ -5,10 +5,7 @@ const UpdateContext = createContext();
 export const UpdateProvider = ({ children }) => {
   const [shouldUpdate, setShouldUpdate] = useState(false);
   const [rooms, setRooms] = useState([]);
-  const [activeMembers, setActiveMembers] = useState([{
-    roomId: "",
-    members: 0
-  }]); // [
+  const [activeMembers, setActiveMembers] = useState([]); // [
   const [loading, setLoading] = useState(false);
 
   const triggerUpdate = () => {

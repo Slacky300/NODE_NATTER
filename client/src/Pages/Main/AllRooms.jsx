@@ -5,8 +5,10 @@ import { fetchAllActiveRooms, verifyRoomPassword, createRoom, deleteRoom } from 
 import { toast } from 'react-toastify';
 import { useUpdate } from '../../context/hasUpdated.jsx';
 import { getLocalStorageWithExpiry } from '../../helpers/auth/authFn.jsx';
+import socket from '../../../config.js';
 
 const AllRooms = () => {
+
 
     const token = getLocalStorageWithExpiry('auth')?.token;
     const { auth,setHasEnteredPassword } = useAuth();
@@ -107,6 +109,31 @@ const AllRooms = () => {
         fetchRooms();
     }, [])
 
+
+    useEffect(() => {
+
+        socket.on('joinRoom', (data) => {
+           
+            setActiveMembers({
+              room: {
+                roomId: data.roomId,
+              },
+              user: data.roomMembersCount,
+            })
+            
+          });
+      
+          socket.on('disconnected-from-room', (data) => {
+           
+            setActiveMembers({
+              room: {
+                roomId: data.roomId,
+              },
+              user: data.roomMembersCount,
+            })
+          });
+        },[socket]);
+
     const getActiveMembersCount = (roomId) => {
         const roomEntry = activeMembers.find(entry => entry.roomId === roomId);
         return roomEntry ? roomEntry.members : 0;
@@ -116,6 +143,7 @@ const AllRooms = () => {
     return (
         
         <>
+        {console.log(activeMembers)}
             <div className='container'>
                 <div className='row my-3 d-flex justify-content-center align-items-center'>
                     <div className='col-12'>
@@ -130,7 +158,7 @@ const AllRooms = () => {
                         <div key={index} className="card mx-5 my-5" style={{ width: '18rem' }}>
                             <div className="card-body">
                                 <h5 className="card-title">{room.roomName}</h5>
-                                <h6 className="card-subtitle mb-2 text-body-secondary">Members : {room?.users?.length}/{room.maxUsers}</h6>
+                                <h6 className="card-subtitle mb-2 text-body-secondary">Members : {room?.users?.length}/{room?.maxUsers}</h6>
                                 <p className="card-text">Created By: {room.roomCreator.username}</p>
                                 <div className='d-flex justify-content-end'>
                                     {auth?.user?.username === room.roomCreator.username &&
