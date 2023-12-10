@@ -20,9 +20,13 @@ const LandingPage = () => {
                         Node Natter is a real-time chat application that empowers users to create chat rooms and engage in dynamic conversations.
                         </p>
                         {token ? (
-                            <Link to='/rooms' className="btn btn-primary btn-lg">Go to Chat Rooms</Link>
+                            <Link to='/rooms'>
+                            <button className="btn btn-primary">Go to Rooms</button>
+                            </Link>
                         ) : (
-                            <Link to='/login' className="btn btn-primary btn-lg">Login</Link>
+                            <Link to='/login'>
+                                <button  className="btn btn-primary">Login</button>
+                            </Link>
                         )}
                     </div>
 
