@@ -9,6 +9,10 @@ import { getLocalStorageWithExpiry } from '../../helpers/auth/authFn.jsx';
 import CopyButton from '../../components/CopyButton.jsx';
 import { useUpdate } from '../../context/hasUpdated.jsx';
 import { extractBaseUrl } from '../../helpers/room/roomFn.jsx';
+import EmojiPicker from 'emoji-picker-react';
+import { toast } from 'react-toastify';
+
+
 
 
 const ChatRoom = () => {
@@ -17,11 +21,13 @@ const ChatRoom = () => {
   const { auth } = useAuth();
   const navigate = useNavigate();
   const { roomId, roomName } = useParams();
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
   const [isTyping, setIsTyping] = useState(false);
   const [roomMembers, setRoomMembers] = useState([]);
   const [typingUsers, setTypingUsers] = useState("");
   const [message, setMessage] = useState('');
-  const { activeMembers, setActiveMembers } = useUpdate();
+  const { setRoomWiseActiveMembers } = useUpdate();
 
 
   const messagesContainerRef = useRef(null);
@@ -39,6 +45,9 @@ const ChatRoom = () => {
     setMessage(e.target.value);
   }
 
+  const handleEmojiClick = (emojiObject) => {
+    setMessage((prevMessage) => prevMessage + emojiObject.emoji);
+  };
 
 
   //To join the respective room on page load
@@ -69,24 +78,38 @@ const ChatRoom = () => {
     socket.on('joinRoom', (data) => {
       setSocketMessages((prevMessages) => [...prevMessages, data]);
       setRoomMembers(data.roomMembers);
-      setActiveMembers({
-        room: {
-          roomId: roomId,
-        },
-        user: data.roomMembersCount,
-      })
+      const updatedRoomWiseActiveMembers = {};
+
+      Object.values(roomMembers).forEach((member) => {
+        const { room, username } = member;
+
+        if (updatedRoomWiseActiveMembers[room]) {
+          updatedRoomWiseActiveMembers[room].push(username);
+        } else {
+          updatedRoomWiseActiveMembers[room] = [username];
+        }
+      });
+
+      setRoomWiseActiveMembers(updatedRoomWiseActiveMembers);
 
     });
 
     socket.on('disconnected-from-room', (data) => {
       setSocketMessages((prevMessages) => [...prevMessages, data]);
       setRoomMembers(data.roomMembers);
-      setActiveMembers({
-        room: {
-          roomId: roomId,
-        },
-        user: data.roomMembersCount,
-      })
+      const updatedRoomWiseActiveMembers = {};
+
+      Object.values(roomMembers).forEach((member) => {
+        const { room, username } = member;
+
+        if (updatedRoomWiseActiveMembers[room]) {
+          updatedRoomWiseActiveMembers[room].push(username);
+        } else {
+          updatedRoomWiseActiveMembers[room] = [username];
+        }
+      });
+
+      setRoomWiseActiveMembers(updatedRoomWiseActiveMembers);
     });
 
 
@@ -156,6 +179,11 @@ const ChatRoom = () => {
 
     if (message.trim() === '') return;
 
+    if(message.length > 1000){
+      toast.error('Message length should be less than 1000 characters');
+      return;
+    }
+
     try {
 
 
@@ -217,7 +245,23 @@ const ChatRoom = () => {
 
   }, [])
 
+  const toggleEmojiPicker = () => {
+    setShowEmojiPicker((prevShowEmojiPicker) => !prevShowEmojiPicker);
+  };
 
+
+  const inputRef = useRef(null);
+
+
+  const handleInputResize = () => {
+    if (inputRef.current) {
+      inputRef.current.style.height = 'auto';
+      inputRef.current.style.height = inputRef.current.scrollHeight + 'px';
+    }
+  };
+
+
+  const isMobile = window.innerWidth <= 768; 
 
 
 
@@ -304,27 +348,46 @@ const ChatRoom = () => {
               </div>
               <div className='row align-items-end'>
                 <div className='col'>
-                  <input
-                    type='text'
-                    className='form-control'
-                    placeholder='Type your message...'
-                    value={message}
-                    onChange={(e) => { handleChange(e), typing() }}
-                    onBlur={stopTyping}
-                  />
-                </div>
-                <div className='col-auto'>
-                  <button onClick={handleSubmit} className='btn btn-primary'>
-                    Send
-                  </button>
+                  <div className='input-group'>
+                    <textarea
+                      type='text'
+                      className='form-control'
+                      placeholder='Type your message...'
+                      value={message}
+                      onChange={(e) => {
+                        handleChange(e);
+                        typing();
+                        handleInputResize();
+                      }}
+                      onBlur={stopTyping}
+                      style={{ minHeight: '10px', maxHeight: '120px', overflowY: 'auto' }}
+
+                    />
+                    <div className='input-group-append mx-2'>
+                      <button className='btn btn-outline-secondary' type='button' onClick={toggleEmojiPicker}>
+                        😊 {/* You can replace this with an emoji icon */}
+                      </button>
+                    </div>
+                    <div className='input-group-append'>
+                    <button onClick={handleSubmit} disabled={message.length===0} className='btn btn-primary'>
+                      Send
+                    </button>
+                  </div>
+                  </div>
+                  
                 </div>
               </div>
             </div>
           </div>
+          <div className='col-2 emojiBox'>
+          {showEmojiPicker && <EmojiPicker onEmojiClick={handleEmojiClick} 
+                              />}
+
+          </div>
         </div>
 
       </div>
-      \
+      
 
       <div className="modal fade" id="showMembers" tabIndex={-1} aria-labelledby="showMemLbl" aria-hidden="true">
         <div className="modal-dialog">
