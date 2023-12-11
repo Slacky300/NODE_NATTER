@@ -16,6 +16,10 @@
   position: relative;
   z-index: 999999;
 }
+.hBtn{
+  position: relative;
+  z-index: 9999999;
+}
 
 @media (max-width: 768px) {
   .landing-page-image {
