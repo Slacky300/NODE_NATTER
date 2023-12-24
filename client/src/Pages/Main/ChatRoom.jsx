@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../context/authContext';
-import socket from '../../../config.js';
 import { useNavigate, useParams } from 'react-router-dom';
 import ChatBubble from '../../components/ChatBubble.jsx';
 import { fetchMessages, sendMessage } from '../../helpers/chats/chatFn.jsx';
@@ -11,13 +10,15 @@ import { useUpdate } from '../../context/hasUpdated.jsx';
 import { extractBaseUrl } from '../../helpers/room/roomFn.jsx';
 import EmojiPicker from 'emoji-picker-react';
 import { toast } from 'react-toastify';
+import { useSocket } from '../../context/socketContext.jsx';
 
 
+//need to add more comments to this file and also need to refactor this file to make it more readable
 
 
 const ChatRoom = () => {
 
-
+  const {socket} = useSocket();
   const { auth } = useAuth();
   const navigate = useNavigate();
   const { roomId, roomName } = useParams();
@@ -27,7 +28,8 @@ const ChatRoom = () => {
   const [roomMembers, setRoomMembers] = useState([]);
   const [typingUsers, setTypingUsers] = useState("");
   const [message, setMessage] = useState('');
-  const { setRoomWiseActiveMembers } = useUpdate();
+  const { roomEventHappened,  setRoomEventHappened} = useUpdate();
+  const [noOfMembers, setNoOfMembers] = useState(0);
 
 
   const messagesContainerRef = useRef(null);
@@ -76,40 +78,29 @@ const ChatRoom = () => {
     //This event is triggered when a user joins the room
     // Inside the 'joinRoom' and 'disconnected-from-room' events
     socket.on('joinRoom', (data) => {
+      setRoomEventHappened(!roomEventHappened);
+
       setSocketMessages((prevMessages) => [...prevMessages, data]);
       setRoomMembers(data.roomMembers);
-      const updatedRoomWiseActiveMembers = {};
-
-      Object.values(roomMembers).forEach((member) => {
-        const { room, username } = member;
-
-        if (updatedRoomWiseActiveMembers[room]) {
-          updatedRoomWiseActiveMembers[room].push(username);
-        } else {
-          updatedRoomWiseActiveMembers[room] = [username];
-        }
-      });
-
-      setRoomWiseActiveMembers(updatedRoomWiseActiveMembers);
+      setNoOfMembers(data.roomMembersCount);
+      setRoomEventHappened(!roomEventHappened);
 
     });
 
     socket.on('disconnected-from-room', (data) => {
+      setRoomEventHappened(!roomEventHappened);
+
       setSocketMessages((prevMessages) => [...prevMessages, data]);
       setRoomMembers(data.roomMembers);
-      const updatedRoomWiseActiveMembers = {};
+      setNoOfMembers(data.roomMembersCount);
+    });
 
-      Object.values(roomMembers).forEach((member) => {
-        const { room, username } = member;
-
-        if (updatedRoomWiseActiveMembers[room]) {
-          updatedRoomWiseActiveMembers[room].push(username);
-        } else {
-          updatedRoomWiseActiveMembers[room] = [username];
-        }
-      });
-
-      setRoomWiseActiveMembers(updatedRoomWiseActiveMembers);
+    socket.on('leaveRoom', (data) => {
+      setRoomEventHappened(!roomEventHappened);
+      setSocketMessages((prevMessages) => [...prevMessages, data]);
+      setRoomMembers(data.roomMembers);
+      setNoOfMembers(data.roomMembersCount);
+    
     });
 
 
@@ -261,7 +252,6 @@ const ChatRoom = () => {
   };
 
 
-  const isMobile = window.innerWidth <= 768; 
 
 
 
@@ -306,6 +296,7 @@ const ChatRoom = () => {
       <button type="button" style={{ display: "none" }} id='queyBtn' className="btn btn-primary" data-bs-toggle="modal" data-bs-target="#confirmModal">
         Launch demo modal
       </button>
+      {console.log(`roomEventHappened: ${roomEventHappened}`)}
       <div className='container my-5'>
         <div className='row d-flex  justify-content-center align-items-center'>
           <div className='form-control' style={{ maxWidth: "50em", height: "80vh", border: "2px solid black", display: "flex", flexDirection: "column" }}>
@@ -321,6 +312,7 @@ const ChatRoom = () => {
 
               <div className="d-flex flex-row-reverse">
                 <button className="btn btn-dark me-2" data-bs-toggle="modal" data-bs-target="#showMembers">
+                  {noOfMembers} &nbsp;
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-people" viewBox="0 0 16 16">
                     <path d="M15 14s1 0 1-1-1-4-5-4-5 3-5 4 1 1 1 1zm-7.978-1A.261.261 0 0 1 7 12.996c.001-.264.167-1.03.76-1.72C8.312 10.629 9.282 10 11 10c1.717 0 2.687.63 3.24 1.276.593.69.758 1.457.76 1.72l-.008.002a.274.274 0 0 1-.014.002H7.022ZM11 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4m3-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0M6.936 9.28a5.88 5.88 0 0 0-1.23-.247A7.35 7.35 0 0 0 5 9c-4 0-5 3-5 4 0 .667.333 1 1 1h4.216A2.238 2.238 0 0 1 5 13c0-1.01.377-2.042 1.09-2.904.243-.294.526-.569.846-.816M4.92 10A5.493 5.493 0 0 0 4 13H1c0-.26.164-1.03.76-1.724.545-.636 1.492-1.256 3.16-1.275ZM1.5 5.5a3 3 0 1 1 6 0 3 3 0 0 1-6 0m3-2a2 2 0 1 0 0 4 2 2 0 0 0 0-4" />
                   </svg>
@@ -398,8 +390,8 @@ const ChatRoom = () => {
             </div>
             <div className="modal-body">
               <ul>
-                {roomMembers && Object.values(roomMembers).map((user, index) => (
-                  <li key={index}>{user?.username}</li>
+                {roomMembers && roomMembers?.map((user, index) => (
+                  <li key={index}>{user}</li>
                 ))}
 
               </ul>

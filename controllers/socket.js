@@ -1,5 +1,8 @@
 const activeUsers = {};
-const activeRooms = {};
+const socketIdAndUsername = {};
+
+import Room from '../models/room.js';
+
 
 export const socketCtrl = (io) => {
   io.on('connection', (socket) => {
@@ -10,65 +13,80 @@ export const socketCtrl = (io) => {
 };
 
 const handleConnection = (socket, io, userId) => {
-  activeUsers[userId] = { username: '', rooms: [] };
 
   logUserConnected(userId);
 
-  socket.on('joinRoom', (roomName, username) => {
+
+  socket.on('joinRoom', async (roomName, username) => {
     socket.join(roomName);
 
-    // Initialize room-specific object if it doesn't exist
-    if (!activeRooms[roomName]) {
-      activeRooms[roomName] = { members: {} };
+    socketIdAndUsername[socket.id] = username;
+
+    socket.room = roomName;
+
+
+
+    if(!activeUsers[roomName]) {
+      activeUsers[roomName] = {
+        users: [username],
+        count: 1,
+      }
+    }else{
+      activeUsers[roomName] = {
+        users: [...activeUsers[roomName].users, username],
+        count: activeUsers[roomName].count + 1,
+      }
     }
 
-    // Update user and room information
-    activeUsers[userId] = { username, rooms: [...activeUsers[userId].rooms, roomName] };
-    activeRooms[roomName].members[userId] = { username, room: roomName };
-    socket.room = roomName;
+    await Room.findByIdAndUpdate(roomName, {
+      activeUsersInRoom: activeUsers[roomName].count,
+    });
+
 
     const responseData = {
       message: `${username} joined the room`,
       user: username,
       roomId: socket.room,
       isSystemMessage: true,
-      roomMembers: activeRooms[roomName].members,
-      roomMembersCount: Object.keys(activeRooms[roomName].members).length,
+      roomMembers: activeUsers[roomName].users,
+      roomMembersCount: activeUsers[roomName].count,
+      roomWithUsers: activeUsers,
     };
+
 
     io.to(socket.room).emit('joinRoom', responseData);
   });
 
-  socket.on('disconnect', () => {
-    const disconnectedUser = activeUsers[userId];
+  socket.on('disconnect', async () => {
 
-    if (!disconnectedUser) return;
 
-    socket.leave(socket.room);
+    const username = socketIdAndUsername[socket.id];
+    let updatedUsers = [];
 
-    // Handle user disconnection from each room
-    disconnectedUser.rooms.forEach((room) => {
-      const responseData = {
-        message: `${disconnectedUser.username} left the room`,
-        user: disconnectedUser.username,
-        isSystemMessage: true,
-        roomId: socket.room,
-        roomMembers: activeRooms[room].members,
-        roomMembersCount: Object.keys(activeRooms[room].members).length,
-      };
-
-      if (activeRooms[room].members[userId]) {
-        delete activeRooms[room].members[userId];
+    if(activeUsers[socket.room]) {
+      updatedUsers = activeUsers[socket.room].users.filter(user => user !== username);
+      activeUsers[socket.room] = {
+        users: updatedUsers,
+        count: updatedUsers.length,
       }
+    }
 
-      io.to(room).emit('disconnected-from-room', responseData);
+    await Room.findByIdAndUpdate(socket.room, {
+      activeUsersInRoom: activeUsers[socket.room]?.count,
     });
+    const responseData = {
+      message: `${username} disconnected`,
+      isSystemMessage: true,
+      roomMembers: updatedUsers,
+      roomMembersCount: updatedUsers.length,
+      roomWithUsers: activeUsers,
+    };
 
-    // Remove the user from the global activeUsers object
-    delete activeUsers[userId];
+
+    io.to(socket.room).emit('disconnected-from-room', responseData);
+
   });
 
-  // ... (other event handlers)
 
   socket.on('message-sent', (data) => {
     socket.room = data.room;
@@ -82,28 +100,38 @@ const handleConnection = (socket, io, userId) => {
     io.to(socket.room).emit('message-received', responseData);
   });
 
-  socket.on('leaveRoom', (data) => {
+  socket.on('leaveRoom', async (data) => {
     const { roomId, user } = data;
+  
+    socket.leave(roomId);
+    
+    let updatedUsers = [];
+  
+    if (activeUsers[roomId]) {
+      updatedUsers = activeUsers[roomId].users.filter(existingUser => existingUser !== user);
 
-    // Check if the user is a member of the room
-    if (activeRooms[roomId] && activeRooms[roomId].members[userId]) {
-        socket.leave(roomId);
-        socket.room = roomId;
-
-        const responseData = {
-            message: `${user} left the room`,
-            user: user,
-            isSystemMessage: true,
-            roomMembers: activeRooms[roomId].members,
-            roomMembersCount: Object.keys(activeRooms[roomId].members).length,
-        };
-
-        // Remove the user from the room-specific members
-        delete activeRooms[roomId].members[user];
-
-        io.to(socket.room).emit('disconnected-from-room', responseData);
+      activeUsers[roomId] = {
+        users: updatedUsers,
+        count: updatedUsers.length,
+      }
     }
-});
+
+    await Room.findByIdAndUpdate(roomId, {
+      activeUsersInRoom: activeUsers[roomId].count,
+    });
+  
+    const responseData = {
+      message: `${user} left the room`,
+      isSystemMessage: true,
+      roomMembers: updatedUsers,
+      roomMembersCount: updatedUsers.length,
+      roomWithUsers: activeUsers,
+    };
+  
+  
+    io.to(roomId).emit('leaveRoom', responseData);
+  });
+  
 
 
   socket.on('typing', (data) => {

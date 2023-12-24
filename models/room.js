@@ -29,6 +29,11 @@ const roomSchema = new mongoose.Schema({
         type: Number,
         default: 10
     },
+
+    activeUsersInRoom: {
+        type: Number,
+        default: 0
+    },
 }, { timestamps: true });
 
 export default mongoose.model("Room", roomSchema);

@@ -7,9 +7,8 @@ export const UpdateProvider = ({ children }) => {
   const [rooms, setRooms] = useState([]);
   const [activeMembers, setActiveMembers] = useState([]); // [
   const [loading, setLoading] = useState(false);
-  const [roomWiseActiveMembers, setRoomWiseActiveMembers] = useState({
-    // room_id: [user_id]
-  }); 
+  const [roomEventHappened, setRoomEventHappened] = useState(false); 
+
 
   const triggerUpdate = () => {
     setShouldUpdate(prev => !prev);
@@ -18,7 +17,7 @@ export const UpdateProvider = ({ children }) => {
 
   return (
     <UpdateContext.Provider value={{ shouldUpdate, triggerUpdate, rooms, setRooms, loading, setLoading, activeMembers, setActiveMembers,
-      roomWiseActiveMembers, setRoomWiseActiveMembers }}>
+      roomEventHappened, setRoomEventHappened  }}>
       {children}
     </UpdateContext.Provider>
   );
