@@ -4,8 +4,8 @@ import react from '@vitejs/plugin-react';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  build: {
-    outDir: './frontend', // Make sure this path is correct relative to your frontend folder
-    emptyOutDir: true,
-  },
+  // build: {
+  //   outDir: './frontend', // Make sure this path is correct relative to your frontend folder
+  //   emptyOutDir: true,
+  // },
 });
