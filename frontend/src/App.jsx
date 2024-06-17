@@ -7,6 +7,7 @@ import AllRooms from "./Pages/Main/AllRooms";
 import Layout from "./Pages/Main/Layout";
 import LandingPage from "./Pages/Main/LandingPage";
 import ReactGA from "react-ga";
+import { useEffect } from "react";
 const TRACKING_ID = "G-DVVJ3Q0KH7"; // OUR_TRACKING_ID
 ReactGA.initialize(TRACKING_ID);
 function App() {

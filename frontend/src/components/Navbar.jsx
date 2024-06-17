@@ -26,7 +26,7 @@ const Navbar = () => {
       <nav className="navbar navbar-expand-lg bg-body-tertiary">
         <div className="container-fluid">
           <Link className="navbar-brand" to="/">
-          Node Natter {roomEventHappened?"U":"Suck"} &nbsp;{auth.user ? `- ${auth.user.username}` : ''}
+          Node Natter &nbsp;{auth.user ? `- ${auth.user.username}` : ''}
           </Link>
           <button
             className="navbar-toggler"
