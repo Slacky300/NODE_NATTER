@@ -3,6 +3,7 @@ import Room from "../models/room.js";
 
 export const createMessage = async (req, res) => {
     const { content, room } = req.body;
+    console.log("Creating message", content, room);
 
     const newMessage = new Message({
         content,

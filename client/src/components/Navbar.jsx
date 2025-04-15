@@ -2,7 +2,6 @@ import React from 'react';
 import { useAuth } from '../context/authContext';
 import { Link, useNavigate } from 'react-router-dom'; 
 import { getLocalStorageWithExpiry } from '../helpers/auth/authFn';
-import Person from '../assets/icons/person-fill.svg';
 import { useUpdate } from '../context/hasUpdated';
 
 
@@ -26,7 +25,7 @@ const Navbar = () => {
       <nav className="navbar navbar-expand-lg bg-body-tertiary">
         <div className="container-fluid">
           <Link className="navbar-brand" to="/">
-          Node Natter {roomEventHappened?"U":"Suck"} &nbsp;{auth.user ? `- ${auth.user.username}` : ''}
+          Node Natter
           </Link>
           <button
             className="navbar-toggler"

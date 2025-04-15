@@ -6,13 +6,9 @@ import ChatRoom from "./Pages/Main/ChatRoom";
 import AllRooms from "./Pages/Main/AllRooms";
 import Layout from "./Pages/Main/Layout";
 import LandingPage from "./Pages/Main/LandingPage";
-import ReactGA from "react-ga";
-const TRACKING_ID = "G-DVVJ3Q0KH7"; // OUR_TRACKING_ID
-ReactGA.initialize(TRACKING_ID);
+
 function App() {
-  useEffect(() => {
-    ReactGA.pageview(window.location.pathname + window.location.search);
-  }, []);
+ 
   const router = createBrowserRouter([
     {
       path: "/",
