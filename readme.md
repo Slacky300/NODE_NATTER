@@ -29,7 +29,7 @@ Welcome to **Node Natter**, a real-time collaborative chat application built wit
 
 ## Deployment
 
-Node Natter is deployed on [CargoDeploy](https://cargodeploy.me). Visit the website: [Node Natter](https://node-natter.vercel.app) to start chatting!
+Node Natter is deployed on [CargoDeploy](https://cargodeploy.me). Visit the website: [Node Natter](https://node-natter.cargodeploy.me) to start chatting!
 
 ## Screenshots
 
